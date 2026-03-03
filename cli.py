@@ -4,7 +4,7 @@ import typer
 from typer import colors
 import pythoncom
 import win32com.client
-from utils import get_all_folders
+from utils import get_all_folders, generate_docs
 from enums import MyApp, EmailStatus, FlagStatus
 from validators import parse_date, parse_email, validate_dates
 
@@ -49,6 +49,7 @@ def main(ctx: typer.Context):
 
 
 @app.command(MyApp.FOLDERS)
+@generate_docs(MyApp.FOLDERS)
 def all_folders(ctx: typer.Context):
     """
     Выводит все папки и их EntryID
@@ -65,6 +66,7 @@ def all_folders(ctx: typer.Context):
 
 
 @app.command(MyApp.FIND_FOLDERS)
+@generate_docs(MyApp.FIND_FOLDERS)
 def find_folders(
         ctx: typer.Context,
         name: str = typer.Argument(..., help='Название папки'),
@@ -73,12 +75,6 @@ def find_folders(
 ):
     """
     Найти папки по имени и вывести их EntryID
-
-    Примеры:
-        outlook-emails find-folders Входящие               # точное совпадение
-        outlook-emails find-folders -i входящие            # точное, но регистр не важен
-        outlook-emails find-folders -p Входящие            # все папки с "Входящие" в названии
-        outlook-emails find-folders -pi входящие           # все папки, содержащие "входящие" (регистр не важен)
     """
     namespace: win32com.client.CDispatch = ctx.obj
     total_finds = 0
@@ -100,6 +96,7 @@ def find_folders(
 
 
 @app.command(MyApp.EMAILS)
+@generate_docs(MyApp.EMAILS)
 def emails(
         ctx: typer.Context,
         entry_id: str = typer.Argument(..., help='EntryID папки'),
@@ -120,16 +117,6 @@ def emails(
 ):
     """
     Получить письма из папки с фильтрацией
-
-    Выводит:
-        - EntryID писем (каждый с новой строки) по умолчанию
-        - Количество писем (если указан --count)
-
-    Примеры:
-        outlook-emails emails <EntryID>                                 # список EntryID
-        outlook-emails emails --count <EntryID>                         # только количество
-        outlook-emails emails --status unread <EntryID>                 # только непрочитанные
-        outlook-emails emails --status unread --flag exec <EntryID>     # непрочитанные с флагом
     """
     validate_dates(date_from, date_to)
     namespace: win32com.client.CDispatch = ctx.obj
@@ -146,6 +133,7 @@ def emails(
 
 
 @app.command(MyApp.UPDATE)
+@generate_docs(MyApp.UPDATE)
 def update(
         ctx: typer.Context,
         entry_id: str = typer.Argument(..., help='EntryID письма'),
@@ -157,24 +145,8 @@ def update(
 ):
     """
     Обновляет статус письма в Outlook по EntryID
-
-    Используется для отметки писем как 'взято в работу' или 'выполнено',
-    а также для управления флагами прочтения.
-
-    Флаги разделены на две независимые группы (можно выбрать ТОЛЬКО ОДИН из каждой):
-
-    Группа 1 (флажки): --exec, --complete, --clear
-    Группа 2 (чтение): --read, --unread
-
-    Всего возможных комбинаций: 3 × 2 = 6
-
-    Примеры:
-        outlook-emails update --exec <EntryID>                # взять в работу
-        outlook-emails update --complete <EntryID>            # завершить
-        outlook-emails update --clear --read <EntryID>        # снять флажки и прочитать
-        outlook-emails update --exec --read <EntryID>         # взять в работу и прочитать
-        outlook-emails update --complete --unread <EntryID>   # завершить, но оставить непрочитанным
     """
+    pass
 
 
 if __name__ == '__main__':
