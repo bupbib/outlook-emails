@@ -40,12 +40,12 @@ def main(ctx: typer.Context):
     try:
         outlook = win32com.client.GetActiveObject('Outlook.Application')
         ctx.obj = outlook.GetNamespace('MAPI')
-    except pythoncom.com_error:
+    except pythoncom.com_error as err:
         typer.secho(
             'Ошибка: Outlook не запущен. Запустите Outlook и повторите попытку',
             fg=colors.RED
         )
-        raise typer.Exit(1)  # Завершаем выполнение утилиты
+        raise typer.Exit(1) from err
 
 
 @app.command(MyApp.FOLDERS)
@@ -132,6 +132,17 @@ def emails(
         outlook-emails emails --status unread --flag exec <EntryID>     # непрочитанные с флагом
     """
     validate_dates(date_from, date_to)
+    namespace: win32com.client.CDispatch = ctx.obj
+
+    try:
+        current_folder = namespace.GetFolderFromID(entry_id)
+    except pythoncom.com_error as err:
+        typer.secho(
+            f'Ошибка: Папка с EntryID "{entry_id}" не найдена\n'
+            f'Используйте {MyApp.NAME} {MyApp.FOLDERS} для просмотра доступных папок',
+            fg=colors.RED
+        )
+        raise typer.Exit(1) from err
 
 
 @app.command(MyApp.UPDATE)
