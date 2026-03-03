@@ -11,7 +11,12 @@ from validators import parse_date, parse_email, validate_dates
 
 app = typer.Typer(
     name=MyApp.NAME,
-    help='Утилита для работы с Outlook с помощью COM-интерфейса',
+    help="""Утилита для работы с Outlook с помощью COM-интерфейса\n
+        Требования:
+            • Windows OS (используется COM API)
+            • Microsoft Outlook (установлен и настроен)
+            • Запущенный экземпляр Outlook
+    """,
     no_args_is_help=True
 )
 
