@@ -1,5 +1,7 @@
 from typing import Iterator
 from win32com.client import CDispatch
+from user_docs import LEXICON
+from enums import MyApp
 
 
 def get_all_folders(folders: CDispatch) -> Iterator[CDispatch]:
@@ -21,3 +23,12 @@ def get_all_folders(folders: CDispatch) -> Iterator[CDispatch]:
             yield from get_all_folders(folder.Folders)
         else:
             yield folder
+
+
+def generate_docs(cmd: MyApp):
+    """Декоратор для установки документации из LEXICON"""
+    def decorator(func):
+        func.__doc__ = LEXICON[cmd]
+        return func
+
+    return decorator
