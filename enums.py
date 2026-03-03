@@ -9,6 +9,9 @@ class MyApp(str, Enum):
     EMAILS = 'emails'
     UPDATE = 'update'
 
+    def __str__(self):
+        return self.value
+
 
 class EmailStatus(str, Enum):
     READ = 'read'
