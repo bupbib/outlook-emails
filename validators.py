@@ -3,13 +3,12 @@ import re
 from datetime import datetime
 
 
-def parse_date(date_str: str | None) -> str | None:
+def parse_date(date_str: str | None) -> datetime | None:
     """Проверяет формат даты"""
     if date_str is not None:
         # валидация только если есть значение
         try:
-            datetime.strptime(date_str, '%d.%m.%Y')
-            return date_str
+            return datetime.strptime(date_str, '%d.%m.%Y')
         except ValueError as err:
             raise typer.BadParameter(
                 f'Неверный формат даты: {date_str}\n'
