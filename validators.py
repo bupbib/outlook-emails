@@ -1,20 +1,5 @@
 import typer
 import re
-from datetime import datetime
-
-
-def parse_date(date_str: str | None) -> datetime | None:
-    """Проверяет формат даты"""
-    if date_str is not None:
-        # валидация только если есть значение
-        try:
-            return datetime.strptime(date_str, '%d.%m.%Y')
-        except ValueError as err:
-            raise typer.BadParameter(
-                f'Неверный формат даты: {date_str}\n'
-                f'Корректный формат: ДД.ММ.ГГГГ (например: 02.03.2026)'
-            ) from err
-    return None
 
 
 def parse_email(email_str: str | None) -> None:
