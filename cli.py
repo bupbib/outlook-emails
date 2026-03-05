@@ -4,9 +4,10 @@ import typer
 from typer import colors
 import pythoncom
 import win32com.client
-from utils import get_all_folders, generate_docs
+from datetime import datetime
+from utils import get_all_folders, generate_docs, build_message_filter
 from enums import MyApp, EmailStatus, FlagStatus
-from validators import parse_date, parse_email, validate_dates
+from validators import parse_email
 
 
 app = typer.Typer(
@@ -16,6 +17,8 @@ app = typer.Typer(
             • Windows OS (используется COM API)
             • Microsoft Outlook (установлен и настроен)
             • Запущенный экземпляр Outlook
+        
+        С исходным кодом утилиты можно ознакомиться по ссылке - https://github.com/bupbib/outlook-emails
     """,
     no_args_is_help=True
 )
@@ -107,22 +110,39 @@ def emails(
         flag: FlagStatus = typer.Option(
             FlagStatus.ALL, '--flag', help='Фильтр по флагам'
         ),
-        date_from: str | None = typer.Option(
-            None, '--from', callback=parse_date, help='Отбор писем начиная с указанной даты (ДД.ММ.ГГГГ)'
+        date_from: datetime | None = typer.Option(
+            None, '--from', help='Отбор писем начиная с указанной даты (ГГГГ-ММ-ДД)'
         ),
-        date_to: str | None = typer.Option(
-            None, '--to', callback=parse_date, help='Отбор писем заканчивая указанной датой, включительно (ДД.ММ.ГГГГ)'
+        date_to: datetime | None = typer.Option(
+            None, '--to', help='Отбор писем заканчивая указанной датой, включительно (ГГГГ-ММ-ДД)'
         ),
         count: bool = typer.Option(False, '--count', help='Показать только количество писем (без вывода EntryID)')
 ):
     """
     Получить письма из папки с фильтрацией
     """
-    validate_dates(date_from, date_to)
+    if isinstance(date_from, datetime) and isinstance(date_to, datetime) and (date_from > date_to):
+        raise typer.BadParameter(
+            f'Дата начала {date_from} позже даты окончания {date_to}'
+        )
+
     namespace: win32com.client.CDispatch = ctx.obj
 
     try:
-        current_folder = namespace.GetFolderFromID(entry_id)
+        folder = namespace.GetFolderFromID(entry_id)
+        search_filter = build_message_filter(status, sender, flag, date_from, date_to)
+        messages = folder.Items.Restrict(search_filter) if search_filter else folder.Items
+
+        if count:
+            typer.secho(messages.Count, fg=colors.CYAN)
+        else:
+            if messages.Count == 0:
+                typer.secho(
+                    f'В папке нет писем с такими условиями: {search_filter}' if search_filter else 'В папке нет писем',
+                    fg=colors.CYAN
+                )
+            for message in messages:
+                typer.secho(message.EntryID)
     except pythoncom.com_error as err:
         typer.secho(
             f'Ошибка: Папка с EntryID "{entry_id}" не найдена\n'
