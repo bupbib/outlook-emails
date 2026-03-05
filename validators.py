@@ -23,3 +23,4 @@ def parse_email(email_str: str | None) -> None:
             f'Неверный формат почты: {email_str}\n'
             f'Корректный формат: username@example.com'
         )
+    return email_str
