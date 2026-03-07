@@ -74,7 +74,8 @@ def find_folders(
         ctx: typer.Context,
         name: str = typer.Argument(..., help='Название папки'),
         partial: bool = typer.Option(False, '--partial', '-p', help='Искать частичное совпадение'),
-        ignore_case: bool = typer.Option(False, '--ignore-case', '-i', help='Игнорировать регистр при поиске')
+        ignore_case: bool = typer.Option(False, '--ignore-case', '-i', help='Игнорировать регистр при поиске'),
+        show_path: bool = typer.Option(False, '--show-path', help='Добавить в вывод полный путь к папке')
 ):
     """
     Найти папки по имени и вывести их EntryID
@@ -89,7 +90,10 @@ def find_folders(
         current_folder = folder.Name.lower() if ignore_case else folder.Name
 
         if current_folder == target_folder or ((target_folder in current_folder) if partial else False):
-            typer.secho(f'Имя папки: «{folder.Name}», EntryID: {folder.EntryID}')
+            typer.secho(
+                f'Имя папки: «{folder.Name}», Путь к папке: {folder.FolderPath}, EntryID: {folder.EntryID}' if show_path
+                else f'Имя папки: «{folder.Name}», EntryID: {folder.EntryID}'
+            )
             total_finds += 1
 
     if total_finds:
