@@ -134,7 +134,7 @@ def emails(
 
     try:
         folder = namespace.GetFolderFromID(entry_id)
-        search_filter = build_message_filter(status, sender, flag, date_from, date_to)
+        search_filter = build_message_filter(status, sender, date_from, date_to)
         messages = folder.Items.Restrict(search_filter) if search_filter else folder.Items
 
         if count:
@@ -146,7 +146,19 @@ def emails(
                     fg=colors.CYAN
                 )
             for message in messages:
-                typer.secho(message.EntryID)
+                # Outlook не дает в Restrict использовать фильтр FlagStatus, поэтому фильтрация по данному флагу вынесена в код
+                # 0 = Нет флага (флаг снят), 1 = Флаг помечен как выполненный (зеленая галочка), 2 = Флаг активен (флажок на исполнение)
+                if flag != FlagStatus.ALL:
+                    flag_condition = {
+                        FlagStatus.ANY: message.FlagStatus != 0,
+                        FlagStatus.NONE: message.FlagStatus == 0,
+                        FlagStatus.EXEC: message.FlagStatus == 2,
+                        FlagStatus.COMP: message.FlagStatus == 1
+                    }.get(flag)
+                    
+                    if not flag_condition: continue
+
+                typer.secho(f'{message.EntryID=}, {message.FlagStatus=}, {message.Subject=}')
     except pythoncom.com_error as err:
         typer.secho(
             f'Ошибка: Папка с EntryID "{entry_id}" не найдена\n'
