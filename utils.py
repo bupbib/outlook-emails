@@ -39,7 +39,6 @@ def generate_docs(cmd: MyApp):
 def build_message_filter(
         status: EmailStatus,
         sender: str | None,
-        flag: FlagStatus,
         date_from: datetime | None,
         date_to: datetime | None
 ) -> str:
@@ -54,14 +53,6 @@ def build_message_filter(
 
     if sender:
         conditions.append(f'[SenderEmailAddress] = "{sender}"')
-
-    if flag != FlagStatus.ALL:
-        conditions.append({
-            FlagStatus.ANY: '[FlagStatus] <> 0',
-            FlagStatus.NONE: '[FlagStatus] = 0',
-            FlagStatus.EXEC: '[FlagStatus] = 1',
-            FlagStatus.COMP: '[FlagStatus] = 2'
-        }.get(flag))
 
     if date_from:
         start = date_from.replace(hour=0, minute=0, second=0).strftime('%x %H:%M')
