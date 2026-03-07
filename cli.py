@@ -166,7 +166,29 @@ def update(
     """
     Обновляет статус письма в Outlook по EntryID
     """
-    pass
+    if [set_exec, set_complete, clear_flag].count(True) > 1:
+        raise typer.BadParameter('Можно выбрать только один флаг: --exec, --complete или --clear')
+
+    if [read, unread].count(True) > 1:
+        raise typer.BadParameter('Нельзя одновременно пометить письмо как прочитанное и непрочитанное')
+
+    namespace: win32com.client.CDispatch = ctx.obj
+
+    try:
+        message = namespace.GetItemFromID(entry_id)
+
+        if read:
+            message.Unread = False
+        elif unread:
+            message.Unread = True
+
+        message.Save()
+    except pythoncom.com_error as err:
+        typer.secho(
+            f'Ошибка: Письмо с EntryID "{entry_id}" не найдено',
+            fg=colors.RED
+        )
+        raise typer.Exit(1) from err
 
 
 if __name__ == '__main__':
