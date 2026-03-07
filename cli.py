@@ -90,10 +90,10 @@ def find_folders(
         current_folder = folder.Name.lower() if ignore_case else folder.Name
 
         if current_folder == target_folder or ((target_folder in current_folder) if partial else False):
-            typer.secho(
-                f'Имя папки: «{folder.Name}», Путь к папке: {folder.FolderPath}, EntryID: {folder.EntryID}' if show_path
-                else f'Имя папки: «{folder.Name}», EntryID: {folder.EntryID}'
-            )
+            if show_path:
+                typer.secho(f'Имя папки: «{folder.Name}», Путь к папке: {folder.FolderPath}, EntryID: {folder.EntryID}')
+            else:
+                typer.secho(f'Имя папки: «{folder.Name}», EntryID: {folder.EntryID}')
             total_finds += 1
 
     if total_finds:
