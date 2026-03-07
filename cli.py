@@ -158,7 +158,8 @@ def emails(
                     
                     if not flag_condition: continue
 
-                typer.secho(f'{message.EntryID=}, {message.FlagStatus=}, {message.Subject=}')
+                # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}')  # для теста
+                typer.secho(message.EntryID)
     except pythoncom.com_error as err:
         typer.secho(
             f'Ошибка: Папка с EntryID "{entry_id}" не найдена\n'
