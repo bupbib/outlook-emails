@@ -4,9 +4,10 @@ import typer
 from typer import colors
 import pythoncom
 import win32com.client
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from utils import get_all_folders, generate_docs, build_message_filter
-from enums import MyApp, EmailStatus, FlagStatus
+from enums import MyApp, EmailStatus, FlagStatus, Period
 from validators import parse_email
 
 
@@ -121,15 +122,28 @@ def emails(
         date_to: datetime | None = typer.Option(
             None, '--to', help='Отбор писем заканчивая указанной датой, включительно (ГГГГ-ММ-ДД)'
         ),
+        period: Period | None = typer.Option(
+            None, '--period', help='Отбор сообщений за определенный период (если указан, то --from и --to игнорируются)'
+        ),
         count: bool = typer.Option(False, '--count', help='Показать только количество писем (без вывода EntryID)')
 ):
     """
     Получить письма из папки с фильтрацией
     """
-    if isinstance(date_from, datetime) and isinstance(date_to, datetime) and (date_from > date_to):
-        raise typer.BadParameter(
-            f'Дата начала {date_from} позже даты окончания {date_to}'
-        )
+    if period:
+        date_to = datetime.today()
+
+        if period == Period.TODAY:
+            date_from = date_to
+        elif period == Period.WEEK:
+            date_from = date_to - timedelta(days=7)
+        elif period == Period.MONTH:
+            date_from = date_to - relativedelta(months=1)
+    else:
+        if isinstance(date_from, datetime) and isinstance(date_to, datetime) and (date_from > date_to):
+            raise typer.BadParameter(
+                f'Дата начала {date_from} позже даты окончания {date_to}'
+            )
 
     namespace: win32com.client.CDispatch = ctx.obj
 
