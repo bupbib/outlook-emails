@@ -25,3 +25,9 @@ class FlagStatus(str, Enum):
     COMP = 'comp'  # завершено
     NONE = 'none'  # без флага
     ALL = 'all'    # все письма (без фильтра по флагам)
+
+
+class Period(str, Enum):
+    TODAY = 'today'  
+    WEEK = 'week'
+    MONTH = 'month'
