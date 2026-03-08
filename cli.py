@@ -42,6 +42,8 @@ def main(ctx: typer.Context):
         )
         raise typer.Exit(1)  # Завершаем выполнение утилиты
 
+    sys.stdout.reconfigure(encoding='cp866', errors='replace')
+
     try:
         outlook = win32com.client.GetActiveObject('Outlook.Application')
         ctx.obj = outlook.GetNamespace('MAPI')
@@ -176,7 +178,7 @@ def emails(
                         
                         if not flag_condition: continue
 
-                    # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}')  # для теста
+                    # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}, {message.Attachments.Count=}')  # для теста
                     typer.secho(message.EntryID)
     except pythoncom.com_error as err:
         typer.secho(
