@@ -20,7 +20,8 @@ app = typer.Typer(
         
         С исходным кодом утилиты можно ознакомиться по ссылке - https://github.com/bupbib/outlook-emails
     """,
-    no_args_is_help=True
+    no_args_is_help=True,
+    add_completion=False
 )
 
 
@@ -145,21 +146,24 @@ def emails(
                     f'В папке нет писем с такими условиями: {search_filter}' if search_filter else 'В папке нет писем',
                     fg=colors.CYAN
                 )
-            for message in messages:
-                # Outlook не дает в Restrict использовать фильтр FlagStatus, поэтому фильтрация по данному флагу вынесена в код
-                # 0 = Нет флага (флаг снят), 1 = Флаг помечен как выполненный (зеленая галочка), 2 = Флаг активен (флажок на исполнение)
-                if flag != FlagStatus.ALL:
-                    flag_condition = {
-                        FlagStatus.ANY: message.FlagStatus != 0,
-                        FlagStatus.NONE: message.FlagStatus == 0,
-                        FlagStatus.EXEC: message.FlagStatus == 2,
-                        FlagStatus.COMP: message.FlagStatus == 1
-                    }.get(flag)
-                    
-                    if not flag_condition: continue
+            else:
+                typer.secho('Найденные письма:', fg=colors.CYAN)
+                for message in reversed(messages):  # от позднего к раннему
 
-                # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}')  # для теста
-                typer.secho(message.EntryID)
+                    # Outlook не дает в Restrict использовать фильтр FlagStatus, поэтому фильтрация по данному флагу вынесена в код
+                    # 0 = Нет флага (флаг снят), 1 = Флаг помечен как выполненный (зеленая галочка), 2 = Флаг активен (флажок на исполнение)
+                    if flag != FlagStatus.ALL:
+                        flag_condition = {
+                            FlagStatus.ANY: message.FlagStatus != 0,
+                            FlagStatus.NONE: message.FlagStatus == 0,
+                            FlagStatus.EXEC: message.FlagStatus == 2,
+                            FlagStatus.COMP: message.FlagStatus == 1
+                        }.get(flag)
+                        
+                        if not flag_condition: continue
+
+                    # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}')  # для теста
+                    typer.secho(message.EntryID)
     except pythoncom.com_error as err:
         typer.secho(
             f'Ошибка: Папка с EntryID "{entry_id}" не найдена\n'
@@ -194,10 +198,19 @@ def update(
     try:
         message = namespace.GetItemFromID(entry_id)
 
+        # Меняем состояние прочтения
         if read:
             message.Unread = False
         elif unread:
             message.Unread = True
+        
+        # Меняем статус флага исполнения
+        if set_exec:
+            message.FlagStatus = 2
+        elif set_complete:
+            message.FlagStatus = 1
+        elif clear_flag:
+            message.FlagStatus = 0
 
         message.Save()
     except pythoncom.com_error as err:
