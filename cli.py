@@ -157,30 +157,30 @@ def emails(
         search_filter = build_message_filter(status, sender, date_from, date_to)
         messages = folder.Items.Restrict(search_filter) if search_filter else folder.Items
 
+        # Outlook не дает в Restrict использовать фильтр FlagStatus, поэтому фильтрация по данному флагу вынесена в код
+        # 0 = Нет флага (флаг снят), 1 = Флаг помечен как выполненный (зеленая галочка), 2 = Флаг активен (флажок на исполнение)
+        filter_func = lambda message: {
+            FlagStatus.ALL: True,
+            FlagStatus.ANY: message.FlagStatus != 0,
+            FlagStatus.NONE: message.FlagStatus == 0,
+            FlagStatus.EXEC: message.FlagStatus == 2,
+            FlagStatus.COMP: message.FlagStatus == 1
+        }.get(flag)
+        
+        filtered_messages = list(filter(filter_func, messages))
+        total_messages = len(filtered_messages)
+
         if count:
-            typer.secho(messages.Count, fg=colors.CYAN)
+            typer.secho(total_messages, fg=colors.CYAN)
         else:
-            if messages.Count == 0:
+            if total_messages == 0:
                 typer.secho(
                     f'В папке нет писем с такими условиями: {search_filter}' if search_filter else 'В папке нет писем',
                     fg=colors.CYAN
                 )
             else:
                 typer.secho('Найденные письма:', fg=colors.CYAN)
-                for message in reversed(messages):  # от позднего к раннему
-
-                    # Outlook не дает в Restrict использовать фильтр FlagStatus, поэтому фильтрация по данному флагу вынесена в код
-                    # 0 = Нет флага (флаг снят), 1 = Флаг помечен как выполненный (зеленая галочка), 2 = Флаг активен (флажок на исполнение)
-                    if flag != FlagStatus.ALL:
-                        flag_condition = {
-                            FlagStatus.ANY: message.FlagStatus != 0,
-                            FlagStatus.NONE: message.FlagStatus == 0,
-                            FlagStatus.EXEC: message.FlagStatus == 2,
-                            FlagStatus.COMP: message.FlagStatus == 1
-                        }.get(flag)
-                        
-                        if not flag_condition: continue
-
+                for message in reversed(filtered_messages):  # от позднего к раннему
                     # typer.secho(f'{message.EntryID}, {message.FlagStatus=}, {message.Subject=}, {message.Attachments.Count=}')  # для теста
                     typer.secho(message.EntryID)
     except pythoncom.com_error as err:
