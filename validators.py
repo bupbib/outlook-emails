@@ -2,7 +2,7 @@ import typer
 import re
 
 
-def parse_email(email_str: str | None) -> None:
+def parse_email(email_str: str | None) -> str | None:
     if (email_str is not None) and (not re.fullmatch(r'[\w.-]+@[\w.-]+\.\w+', email_str)):
         raise typer.BadParameter(
             f'Неверный формат почты: {email_str}\n'
